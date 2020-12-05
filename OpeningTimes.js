@@ -145,12 +145,32 @@ class OpeningTimes {
     return undefined;
   }
 
+  _findNextClosingTime(moment, sessions) {
+    const nextDay = sessions
+      .filter((day) => (!this._isClosedAllDay(day)))
+      .find((day) => (day.some(this._getDateBeforeSessionFinder(moment))));
+
+    if (nextDay) {
+      return nextDay.find(this._getDateBeforeSessionFinder(moment)).to;
+    }
+
+    return undefined;
+  }
+
   _nextOpen(moment) {
     const allSessions = this._getOpenSessions(moment, [0, 1, 2, 3, 4, 5, 6]);
     if (this._findMomentInSessions(moment, allSessions)) {
       return moment;
     }
     return this._findNextOpeningTime(moment, allSessions);
+  }
+
+  _nextClosed(moment) {
+    const allSessions = this._getOpenSessions(moment, [0, 1, 2, 3, 4, 5, 6]);
+    if (this._findMomentInSessions(moment, allSessions)) {
+      return moment;
+    }
+    return this._findNextClosingTime(moment, allSessions);
   }
 
   /* Public API */
@@ -165,7 +185,7 @@ class OpeningTimes {
         returnValue.nextClosed = session.to;
         returnValue.nextOpen = moment;
       } else {
-        returnValue.nextClosed = moment;
+        returnValue.nextClosed = this._nextClosed(moment);
         returnValue.nextOpen = this._nextOpen(moment);
       }
     }
